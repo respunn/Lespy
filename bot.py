@@ -28,6 +28,7 @@ async def on_ready():
     except Exception as e:
         print(e)
 
+#Testing
 #Latency
 @bot.tree.command(name='latency', description="Shows bot's latency.")
 @app_commands.checks.has_permissions(administrator=True)
