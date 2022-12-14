@@ -60,6 +60,7 @@ async def avatar(interaction: discord.Interaction, member: Optional[discord.Memb
 async def clear(interaction: discord.Interaction, amount: int):
     await interaction.response.send_message(f"Successfully deleted {amount} of messages.", ephemeral=True)
     await interaction.channel.purge(limit=amount)
+#TODO clear from specific user
 
 #Ban
 @bot.tree.command(name='ban', description="Bans members.")
@@ -137,36 +138,8 @@ async def on_message_delete(message):
         # Send a message to the channel
         await channel.send(f"{timestamp} - {message.author.mention} (ID: {message.author.id} ) deleted: {message.content}")
 
-
-@bot.event
-async def on_raw_reaction_add(reaction, user):
-    if reaction.author == bot.user:
-        return
-    # Get the channel object
-    channel = bot.get_channel(CHANNEL_ID)
-    # Log the reaction
-    await channel.send(f"{timestamp} - {user} added the '{reaction.emoji}' reaction to the message '{reaction.message.content}'")
-
-@bot.event
-async def on_raw_reaction_remove(reaction, user):
-    if reaction.author == bot.user:
-        return
-    # Get the channel object
-    channel = bot.get_channel(CHANNEL_ID)
-    # Log the reaction
-    await channel.send(f"{timestamp} - {user} removed the '{reaction.emoji}' reaction from the message '{reaction.message.content}'")
-
-
-#Audit
-@bot.event
-async def audit_log_entry(entry):
-    print('worked')
-    if entry.guild.id == GUILD_ID:
-        # Get the channel object
-        channel = bot.get_channel(CHANNEL_ID)
-        # Send a message to the channel
-        await channel.send(f"{timestamp} - User: {entry.user} (ID: {entry.user.id} ), Action: {entry.action}, Extra Info: {entry.extra}")
-
+#TODO reaction log 
+#TODO audit log
 
 #Join and leave
 @bot.event
