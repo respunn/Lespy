@@ -90,12 +90,15 @@ async def ban_error(interaction: discord.Interaction, error):
 
 
 #Logging
+
 #Logging channel
 CHANNEL_ID = 1052611969305288715
 #Logging guild
 GUILD_ID = 1040908923521216572
 @bot.event
 async def on_message(message):
+    if message.author == bot.user:
+        return
     # Only log messages that are sent in a guild
     if message.guild.id == GUILD_ID:
         # Log the message when it is sent
@@ -106,6 +109,8 @@ async def on_message(message):
 
 @bot.event
 async def on_message_edit(before, after):
+    if before.author == bot.user:
+        return
     # Only log messages that are edited in a guild
     if after.guild.id == GUILD_ID:
         # Log the message when it is sent
@@ -116,6 +121,8 @@ async def on_message_edit(before, after):
 
 @bot.event
 async def on_message_delete(message):
+    if message.author == bot.user:
+        return
     # Only log messages that are deleted in a guild
     if message.guild.id == GUILD_ID:
         # Log the message when it is sent
