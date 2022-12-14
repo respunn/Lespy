@@ -69,7 +69,7 @@ async def ban(interaction: discord.Interaction, member: discord.Member, delete_m
 async def ban_error(interaction: discord.Interaction, error):
     if isinstance(error, MissingPermissions):
         await interaction.response.send_message(f"You don't have permission to use this command!", ephemeral=True)
-       
+
 #Kick
 @bot.tree.command(name='kick', description="Kicks members.")
 @app_commands.checks.has_permissions(kick_members=True)
