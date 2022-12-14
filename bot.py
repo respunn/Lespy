@@ -93,10 +93,7 @@ async def ban_error(interaction: discord.Interaction, error):
 
 #Logging
 
-#Logging channel
-CHANNEL_ID = 1052611969305288715
-#Logging guild
-GUILD_ID = 1040908923521216572
+from logger_config import *
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -144,5 +141,31 @@ async def on_message_delete(message):
         channel = bot.get_channel(CHANNEL_ID)
         # Send a message to the channel
         await channel.send(f"{timestamp} - {message.author.mention} (ID: {message.author.id} ) deleted: {message.content}")
+
+@bot.event
+async def on_raw_reaction_add(reaction, user):
+    if reaction.author == bot.user:
+        return
+    # Get the current time
+    now = datetime.datetime.now()
+    # Format the timestamp
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    # Get the channel object
+    channel = bot.get_channel(CHANNEL_ID)
+    # Log the reaction
+    await channel.send(f"{timestamp} - {user.mention} added the '{reaction.emoji}' reaction to the message '{reaction.message.content}'")
+
+@bot.event
+async def on_raw_reaction_remove(reaction, user):
+    if reaction.author == bot.user:
+        return
+    # Get the current time
+    now = datetime.datetime.now()
+    # Format the timestamp
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    # Get the channel object
+    channel = bot.get_channel(CHANNEL_ID)
+    # Log the reaction
+    await channel.send(f"{timestamp} - {user.mention} removed the '{reaction.emoji}' reaction from the message '{reaction.message.content}'")
 
 bot.run(TOKEN)
