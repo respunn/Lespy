@@ -28,6 +28,16 @@ async def on_ready():
     except Exception as e:
         print(e)
 
+#Latency
+@bot.tree.command(name='latency', description="Shows bot's latency.")
+@app_commands.checks.has_permissions(administrator=True)
+async def latency(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Latency is {round(bot.latency * 1000)}ms", ephemeral=True)
+
+#Description
+@bot.tree.command(name='illusa', description="What is Illusa?")
+async def malderecesi(interaction: discord.Interaction):
+    await interaction.response.send_message(content=f'To be Announced.')
 
 
 bot.run(TOKEN)
