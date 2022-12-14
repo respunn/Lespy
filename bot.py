@@ -75,7 +75,7 @@ async def ban_error(interaction: discord.Interaction, error):
 @app_commands.checks.has_permissions(kick_members=True)
 async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
     try:
-        await member.kick(reason=reason)
+        await member.kick(reason = reason)
         await interaction.response.send_message(f"Successfully kicked {member.mention} for: {reason}")
     except:
         await interaction.response.send_message(f"The {member.mention} could not be kicked from the server.", ephemeral=True)
