@@ -111,7 +111,7 @@ async def on_message(message):
         # Get the channel object
         channel = bot.get_channel(CHANNEL_ID)
         # Send a message to the channel
-        await channel.send(f"{timestamp} - {message.author} sent: {message.content}")
+        await channel.send(f"{timestamp} - {message.author.mention} (ID: {message.author.id} ) sent: {message.content}")
 
 @bot.event
 async def on_message_edit(before, after):
@@ -127,7 +127,7 @@ async def on_message_edit(before, after):
         # Get the channel object
         channel = bot.get_channel(CHANNEL_ID)
         # Send a message to the channel
-        await channel.send(f"{timestamp} - {after.author} edited his/her message from '{before.content}' to '{after.content}'")
+        await channel.send(f"{timestamp} - {after.author.mention} (ID: {after.author.id} ) edited his/her message from '{before.content}' to '{after.content}'")
 
 @bot.event
 async def on_message_delete(message):
@@ -143,6 +143,6 @@ async def on_message_delete(message):
         # Get the channel object
         channel = bot.get_channel(CHANNEL_ID)
         # Send a message to the channel
-        await channel.send(f"{timestamp} - {message.author} deleted: {message.content}")
+        await channel.send(f"{timestamp} - {message.author.mention} (ID: {message.author.id} ) deleted: {message.content}")
 
 bot.run(TOKEN)
