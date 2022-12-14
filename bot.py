@@ -7,6 +7,8 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions
 from discord.utils import get
+import datetime
+
 
 import os
 from dotenv import load_dotenv
@@ -99,36 +101,48 @@ GUILD_ID = 1040908923521216572
 async def on_message(message):
     if message.author == bot.user:
         return
+    # Get the current time
+    now = datetime.datetime.now()
+    # Format the timestamp
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     # Only log messages that are sent in a guild
     if message.guild.id == GUILD_ID:
         # Log the message when it is sent
         # Get the channel object
         channel = bot.get_channel(CHANNEL_ID)
         # Send a message to the channel
-        await channel.send(f"{message.author}: {message.content}")
+        await channel.send(f"{timestamp} - {message.author} sent: {message.content}")
 
 @bot.event
 async def on_message_edit(before, after):
     if before.author == bot.user:
         return
+    # Get the current time
+    now = datetime.datetime.now()
+    # Format the timestamp
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     # Only log messages that are edited in a guild
     if after.guild.id == GUILD_ID:
         # Log the message when it is sent
         # Get the channel object
         channel = bot.get_channel(CHANNEL_ID)
         # Send a message to the channel
-        await channel.send(f"{after.author}: {after.content}")
+        await channel.send(f"{timestamp} - {after.author} edited his/her message from '{before.content}' to '{after.content}'")
 
 @bot.event
 async def on_message_delete(message):
     if message.author == bot.user:
         return
+    # Get the current time
+    now = datetime.datetime.now()
+    # Format the timestamp
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     # Only log messages that are deleted in a guild
     if message.guild.id == GUILD_ID:
         # Log the message when it is sent
         # Get the channel object
         channel = bot.get_channel(CHANNEL_ID)
         # Send a message to the channel
-        await channel.send(f"{message.author}: {message.content}")
+        await channel.send(f"{timestamp} - {message.author} deleted: {message.content}")
 
 bot.run(TOKEN)
