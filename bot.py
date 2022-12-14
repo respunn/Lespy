@@ -88,4 +88,27 @@ async def ban_error(interaction: discord.Interaction, error):
         await interaction.response.send_message(f"You don't have permission to use this command!", ephemeral=True)
 
 
+
+#Logging
+@bot.event
+async def on_message(message):
+    # Only log messages that are sent in a guild
+    if message.guild is not None:
+        # Log the message when it is sent
+        print(f"{message.author}: {message.content}")
+
+@bot.event
+async def on_message_edit(before, after):
+    # Only log messages that are edited in a guild
+    if after.guild is not None:
+        # Log the edited message
+        print(f"{after.author} edited their message: {after.content}")
+
+@bot.event
+async def on_message_delete(message):
+    # Only log messages that are deleted in a guild
+    if message.guild is not None:
+        # Log the deleted message
+        print(f"{message.author} deleted their message: {message.content}")
+
 bot.run(TOKEN)
