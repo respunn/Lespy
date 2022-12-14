@@ -90,25 +90,38 @@ async def ban_error(interaction: discord.Interaction, error):
 
 
 #Logging
+#Logging channel
+CHANNEL_ID = 1052611969305288715
+#Logging guild
+GUILD_ID = 1040908923521216572
 @bot.event
 async def on_message(message):
     # Only log messages that are sent in a guild
-    if message.guild is not None:
+    if message.guild.id == GUILD_ID:
         # Log the message when it is sent
-        print(f"{message.author}: {message.content}")
+        # Get the channel object
+        channel = bot.get_channel(CHANNEL_ID)
+        # Send a message to the channel
+        await channel.send(f"{message.author}: {message.content}")
 
 @bot.event
 async def on_message_edit(before, after):
     # Only log messages that are edited in a guild
-    if after.guild is not None:
-        # Log the edited message
-        print(f"{after.author} edited their message: {after.content}")
+    if after.guild.id == GUILD_ID:
+        # Log the message when it is sent
+        # Get the channel object
+        channel = bot.get_channel(CHANNEL_ID)
+        # Send a message to the channel
+        await channel.send(f"{after.author}: {after.content}")
 
 @bot.event
 async def on_message_delete(message):
     # Only log messages that are deleted in a guild
-    if message.guild is not None:
-        # Log the deleted message
-        print(f"{message.author} deleted their message: {message.content}")
+    if message.guild.id == GUILD_ID:
+        # Log the message when it is sent
+        # Get the channel object
+        channel = bot.get_channel(CHANNEL_ID)
+        # Send a message to the channel
+        await channel.send(f"{message.author}: {message.content}")
 
 bot.run(TOKEN)
