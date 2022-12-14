@@ -39,5 +39,15 @@ async def latency(interaction: discord.Interaction):
 async def malderecesi(interaction: discord.Interaction):
     await interaction.response.send_message(content=f'To be Announced.')
 
+#Avatar
+@bot.tree.command(name='avatar', description="You can get people's profile pictures.")
+async def avatar(interaction: discord.Interaction, member: Optional[discord.Member]):
+    if member == None:
+        ProfilePicture = interaction.user.display_avatar.url
+        await interaction.response.send_message(ProfilePicture)
+    else:
+        ProfilePicture = member.avatar.url
+        await interaction.response.send_message(ProfilePicture)
+
 
 bot.run(TOKEN)
