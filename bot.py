@@ -93,15 +93,18 @@ async def ban_error(interaction: discord.Interaction, error):
 
 #Logging
 
+# Get the current time
+now = datetime.datetime.now()
+# Format the timestamp
+timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+
+#Importing config file
 from logger_config import *
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
-    # Get the current time
-    now = datetime.datetime.now()
-    # Format the timestamp
-    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    
     # Only log messages that are sent in a guild
     if message.guild.id == GUILD_ID:
         # Log the message when it is sent
@@ -114,10 +117,6 @@ async def on_message(message):
 async def on_message_edit(before, after):
     if before.author == bot.user:
         return
-    # Get the current time
-    now = datetime.datetime.now()
-    # Format the timestamp
-    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     # Only log messages that are edited in a guild
     if after.guild.id == GUILD_ID:
         # Log the message when it is sent
@@ -130,10 +129,6 @@ async def on_message_edit(before, after):
 async def on_message_delete(message):
     if message.author == bot.user:
         return
-    # Get the current time
-    now = datetime.datetime.now()
-    # Format the timestamp
-    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     # Only log messages that are deleted in a guild
     if message.guild.id == GUILD_ID:
         # Log the message when it is sent
@@ -142,30 +137,50 @@ async def on_message_delete(message):
         # Send a message to the channel
         await channel.send(f"{timestamp} - {message.author.mention} (ID: {message.author.id} ) deleted: {message.content}")
 
+
 @bot.event
 async def on_raw_reaction_add(reaction, user):
     if reaction.author == bot.user:
         return
-    # Get the current time
-    now = datetime.datetime.now()
-    # Format the timestamp
-    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     # Get the channel object
     channel = bot.get_channel(CHANNEL_ID)
     # Log the reaction
-    await channel.send(f"{timestamp} - {user.mention} added the '{reaction.emoji}' reaction to the message '{reaction.message.content}'")
+    await channel.send(f"{timestamp} - {user} added the '{reaction.emoji}' reaction to the message '{reaction.message.content}'")
 
 @bot.event
 async def on_raw_reaction_remove(reaction, user):
     if reaction.author == bot.user:
         return
-    # Get the current time
-    now = datetime.datetime.now()
-    # Format the timestamp
-    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     # Get the channel object
     channel = bot.get_channel(CHANNEL_ID)
     # Log the reaction
-    await channel.send(f"{timestamp} - {user.mention} removed the '{reaction.emoji}' reaction from the message '{reaction.message.content}'")
+    await channel.send(f"{timestamp} - {user} removed the '{reaction.emoji}' reaction from the message '{reaction.message.content}'")
+
+
+#Audit
+@bot.event
+async def audit_log_entry(entry):
+    print('worked')
+    if entry.guild.id == GUILD_ID:
+        # Get the channel object
+        channel = bot.get_channel(CHANNEL_ID)
+        # Send a message to the channel
+        await channel.send(f"{timestamp} - User: {entry.user} (ID: {entry.user.id} ), Action: {entry.action}, Extra Info: {entry.extra}")
+
+
+#Join and leave
+@bot.event
+async def on_member_join(member):
+    # Get the channel object
+    channel = bot.get_channel(CHANNEL_ID)
+    # Print a message when a user joins the server
+    await channel.send(f"{timestamp} - {member.mention} (ID: {member.id} ) joined the server.")
+
+@bot.event
+async def on_member_remove(member):
+    # Get the channel object
+    channel = bot.get_channel(CHANNEL_ID)
+    # Print a message when a user leaves the server
+    await channel.send(f"{timestamp} - {member.mention} (ID: {member.id} ) left the server.")
 
 bot.run(TOKEN)
