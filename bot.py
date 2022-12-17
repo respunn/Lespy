@@ -178,11 +178,12 @@ async def on_guild_channel_update(before, after):
     # Print a message when a user leaves the server
     await channel2.send(f"{timestamp} - Channel {before.mention} (ID: {before.id} ) changed to {after} from {before}.")
 """
+
 @bot.event
-async def AuditLogEntry(ctx):
+async def on_ready(guild):
     # Get the channel object
-    channel = bot.get_channel(CHANNEL_ID)
-    async for entry in bot.get_guild(1040908923521216572).audit_logs():
-       await channel.send(f'{entry.user} - {entry.target}')
+    channel2 = bot.get_channel(CHANNEL_ID)
+    async for entry in guild.audit_logs(limit=100):
+        await channel2.send(f'{entry.user} did {entry.action} to {entry.target}')
 
 bot.run(TOKEN)
