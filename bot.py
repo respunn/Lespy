@@ -157,7 +157,7 @@ async def on_member_remove(member):
     await channel.send(f"{timestamp} - {member.mention} (ID: {member.id} ) left the server.")
 
 
-"""
+
 #Channel
 @bot.event
 async def on_guild_channel_delete(channel):
@@ -177,13 +177,6 @@ async def on_guild_channel_update(before, after):
     channel2 = bot.get_channel(CHANNEL_ID)
     # Print a message when a user leaves the server
     await channel2.send(f"{timestamp} - Channel {before.mention} (ID: {before.id} ) changed to {after} from {before}.")
-"""
 
-@bot.event
-async def on_ready(guild):
-    # Get the channel object
-    channel2 = bot.get_channel(CHANNEL_ID)
-    async for entry in guild.audit_logs(limit=100):
-        await channel2.send(f'{entry.user} did {entry.action} to {entry.target}')
 
 bot.run(TOKEN)
