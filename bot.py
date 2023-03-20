@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+#Connecting to database.
 import sqlite3
 try:
     conn = sqlite3.connect('level_system.db')
@@ -10,14 +11,17 @@ try:
 except sqlite3.Error as e:
     print(f"Error connecting to database: {e}")
 
+#Getting TOKEN for bot.
 import os
 from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
+#Assigning bot.
 bot = commands.Bot(command_prefix='!', intents= discord.Intents.all())
 bot.remove_command('help')
 
+#Getting ready for bot.
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.watching, name="you"))
@@ -29,6 +33,7 @@ async def on_ready():
     except Exception as e:
         print(e)
 
+#Checking every message for is there any words that we want to detect.
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -50,6 +55,7 @@ async def on_message(message):
     else:
         await bot.process_commands(message)
 
+#User's XP and Level info.
 @bot.command()
 async def xp(ctx):
     c.execute('SELECT * FROM users WHERE id = ?', (ctx.author.id,))
