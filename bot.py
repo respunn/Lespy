@@ -503,7 +503,5 @@ async def resetall(ctx):
         embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
         await ctx.send(embed=embed)
 
-
-
 # Running the bot with the TOKEN
 bot.run(TOKEN)
