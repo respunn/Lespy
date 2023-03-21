@@ -434,6 +434,27 @@ async def showadmins(ctx):
         embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
         await ctx.send(embed=embed)
 
+@bot.command()
+async def help(ctx):
+    # Dictionary of all the commands and their descriptions
+    commands = {
+        '!leaderboard': 'Displays the leaderboard of the top users in the server based on their level.',
+        '!progress @user[Optional]': 'Displays the progress of a specific user in the server towards the next level.\nIf no user is specified, the command will display the progress of the user who invoked the command.',
+        '!setlevel @user': 'Sets the level of a specific user in the server. Only super admins can use this command.',
+        '!addxp @user': 'Adds experience points to a specific user in the server. Only super admins can use this command.',
+        '!deleteuser @user': "Deletes a specific user's data from the server, including their level and experience points.",
+        '!deleteusers': 'Deletes all user data from the server, including their levels and experience points. Only super admins can use this command.',
+        '!addadmin @user': 'Adds a new admin to the database.',
+        '!removeadmin @user': 'Removes an admin from the database.',
+        '!showadmins': 'Shows a list of all the admins in the database.',
+        '!help': 'Shows a list of all the available commands and their descriptions.'
+    }
+
+    # Creating an embed message with the commands and their descriptions
+    embed = discord.Embed(title="Help", description="List of all available commands and their descriptions.", color=discord.Color.blue())
+    for command, description in commands.items():
+        embed.add_field(name=command, value=description, inline=False)
+    await ctx.send(embed=embed)
 
 # Running the bot with the TOKEN
 bot.run(TOKEN)
