@@ -79,14 +79,14 @@ async def setlevel(ctx, user: discord.User, level_from_user: int):
             level_from_user = max_level
             check = True
         if result is None:
-            cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level_from_user, 1))
+            cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level_from_user, 0))
             conn.commit()
             if check == False:
                 await ctx.send(f'**{user}** has been added to the database and level has been set to **{level_from_user}**.')
             else:
                 await ctx.send(f'**{user}** has been added to the database and level has been set to **{level_from_user}**. (Max level set to {max_level})')
         else:
-            cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (1, level_from_user, user.id))
+            cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (0, level_from_user, user.id))
             conn.commit()
             if check == False:
                 await ctx.send(f"**{user}**'s level has been set to **{level_from_user}**.")
