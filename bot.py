@@ -34,7 +34,7 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-WORDS = ("ty", "thanks", "thank you")
+from config import *
 
 #Checking every message for is there any words that we want to detect.
 @bot.event
@@ -51,17 +51,17 @@ async def on_message(message):
         else:
             xp, level = result
             xp += 1
-            max_level_xp = level * 2 * 1.2
-            max_level_xp = round(max_level_xp)
-            if max_level_xp > 1000:
-                max_level_xp = 1000
-            elif max_level_xp < 10:
-                max_level_xp = 10
-            while xp >= max_level_xp:
+            required_xp = level * 2 * level_xp_multiplier
+            required_xp = round(required_xp)
+            if required_xp > max_level_experience:
+                required_xp = max_level_experience
+            elif required_xp < min_level_experience:
+                required_xp = min_level_experience
+            while xp >= required_xp:
                 level += 1
-                xp = xp - max_level_xp
-            if level >= 500:
-                level = 500
+                xp = xp - required_xp
+            if level >= max_level:
+                level = max_level
                 xp = 0
             cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (xp, level, message.author.id))
             conn.commit()
@@ -69,56 +69,72 @@ async def on_message(message):
         await bot.process_commands(message)
 
 @bot.command()
-async def setlevel(ctx, user: discord.User, level: int):
-    cursor = conn.cursor()
-    cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
-    result = cursor.fetchone()
-    if result is None:
-        cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level, 1))
-        conn.commit()
-        await ctx.send(f'**{user}** has been added to the database and level has been set to **{level}**.')
+async def setlevel(ctx, user: discord.User, level_from_user: int):
+    if str(ctx.author.id) in admin_ids:
+        cursor = conn.cursor()
+        cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
+        result = cursor.fetchone()
+        check = False
+        if level_from_user > max_level:
+            level_from_user = max_level
+            check = True
+        if result is None:
+            cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level_from_user, 1))
+            conn.commit()
+            if check == False:
+                await ctx.send(f'**{user}** has been added to the database and level has been set to **{level_from_user}**.')
+            else:
+                await ctx.send(f'**{user}** has been added to the database and level has been set to **{level_from_user}**. (Max level set to {max_level})')
+        else:
+            cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (1, level_from_user, user.id))
+            conn.commit()
+            if check == False:
+                await ctx.send(f"**{user}**'s level has been set to **{level_from_user}**.")
+            else:
+                await ctx.send(f"**{user}**'s level has been set to **{level_from_user}**. (Max level set to {max_level})")
     else:
-        cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (1, level, user.id))
-        conn.commit()
-        await ctx.send(f"**{user}**'s level has been set to **{level}**.")
+        await ctx.send(f"You don not have enough authorization for use this command.")
 
 @bot.command()
-async def addxp(ctx, user: discord.User, exp: int):
-    cursor = conn.cursor()
-    cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
-    result = cursor.fetchone()
-    if result is None:
-        level = 1
-        max_level_xp = 1 * 2 * 1.2
-        max_level_xp = round(max_level_xp)
-        if max_level_xp > 1000:
-            max_level_xp = 1000
-        elif max_level_xp < 10:
-            max_level_xp = 10
-        while exp >= max_level_xp:
-            level += 1
-            exp = exp - max_level_xp
-        cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level, exp))
-        conn.commit()
-        await ctx.send(f'**{user}** has been added to the database and added **{exp}**.')
+async def addxp(ctx, user: discord.User, xp_amount_from_user: int):
+    if str(ctx.author.id) in admin_ids:
+        cursor = conn.cursor()
+        cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
+        result = cursor.fetchone()
+        if result is None:
+            level = 1
+            required_xp = 1 * 2 * level_xp_multiplier
+            required_xp = round(required_xp)
+            if required_xp > max_level_experience:
+                required_xp = max_level_experience
+            elif required_xp < min_level_experience:
+                required_xp = min_level_experience
+            while xp >= required_xp:
+                level += 1
+                xp = xp - required_xp
+            cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level, xp_amount_from_user))
+            conn.commit()
+            await ctx.send(f'**{user}** has been added to the database and added **{xp_amount_from_user}**.')
+        else:
+            xp, level = result
+            xp += xp_amount_from_user
+            required_xp = level * 2 * level_xp_multiplier
+            required_xp = round(required_xp)
+            if required_xp > max_level_experience:
+                required_xp = max_level_experience
+            elif required_xp < min_level_experience:
+                required_xp = min_level_experience
+            while xp >= required_xp:
+                level += 1
+                xp = xp - required_xp
+            if level >= max_level:
+                level = max_level
+                xp = 0
+            cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (xp, level, user.id))
+            conn.commit()
+            await ctx.send(f"Added **{xp_amount_from_user}** xp to **{user}**.")
     else:
-        xp, level = result
-        xp += exp
-        max_level_xp = level * 2 * 1.2
-        max_level_xp = round(max_level_xp)
-        if max_level_xp > 1000:
-            max_level_xp = 1000
-        elif max_level_xp < 10:
-            max_level_xp = 10
-        while xp >= max_level_xp:
-            level += 1
-            xp = xp - max_level_xp
-        if level >= 500:
-            level = 500
-            xp = 0
-        cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (xp, level, user.id))
-        conn.commit()
-        await ctx.send(f"Added **{exp}** xp to **{user}**.")
+        await ctx.send(f"You don not have enough authorization for use this command.")
 
 #Leaderboard command
 @bot.command()
