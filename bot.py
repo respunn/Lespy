@@ -120,18 +120,6 @@ async def addxp(ctx, user: discord.User, exp: int):
         conn.commit()
         await ctx.send(f"Added **{exp}** xp to **{user}**.")
 
-
-@bot.command()
-async def xp(ctx):
-    c.execute('SELECT * FROM users WHERE id = ?', (ctx.author.id,))
-    result = c.fetchone()
-    if result is None:
-        await ctx.send('You have no level yet!')
-    else:
-        xp = result[3]
-        level = result[2]
-        await ctx.send(f'Your level is {level} with {xp} XP.')
-
 #Leaderboard command
 @bot.command()
 async def leaderboard(ctx):
