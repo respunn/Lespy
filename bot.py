@@ -1,6 +1,7 @@
 # Importing necessary modules
 import discord
 from discord.ext import commands
+import asyncio
 
 # Connecting to database
 import sqlite3
@@ -321,11 +322,9 @@ async def progress(ctx, user: discord.User = None):
     # If no user is tagged, show progress of the message author
     if user is None:
         user = ctx.author
-
     cursor = conn.cursor()
     cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
     result = cursor.fetchone()
-
     # If user not found in database, send error message
     if result is None:
         embed = discord.Embed(color=discord.Color.red())
@@ -344,7 +343,6 @@ async def progress(ctx, user: discord.User = None):
         xp_percentage = int((xp / required_xp) * 100)
         # Calculating remaining XP to next level
         remaining_xp = required_xp - xp
-
         # Sending progress message
         embed = discord.Embed(color=discord.Color.green())
         if user == ctx.author:
@@ -381,7 +379,7 @@ async def addadmin(ctx, user: discord.User):
         embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
         await ctx.send(embed=embed)
 
-
+# Command to remove an admin from the database
 @bot.command()
 async def removeadmin(ctx, user: discord.User):
     # Checking if the user invoking the command is an admin
@@ -408,11 +406,14 @@ async def removeadmin(ctx, user: discord.User):
         embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
         await ctx.send(embed=embed)
 
-
+# Command to show all admins from the database
 @bot.command()
 async def showadmins(ctx):
     # Checking if the user invoking the command is an admin
-    if str(ctx.author.id) in super_admin_ids:
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM admins WHERE id = ?', (ctx.author.id,))
+    result = cursor.fetchone()
+    if result is not None or ctx.author.id in super_admin_ids:
         cursor = conn.cursor()
         # Fetching all the admins from the database
         cursor.execute('SELECT id, name FROM admins')
@@ -434,20 +435,22 @@ async def showadmins(ctx):
         embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
         await ctx.send(embed=embed)
 
+# Command that gives information about all commands
 @bot.command()
 async def help(ctx):
     # Dictionary of all the commands and their descriptions
     commands = {
         '!leaderboard': 'Displays the leaderboard of the top users in the server based on their level.',
         '!progress @user[Optional]': 'Displays the progress of a specific user in the server towards the next level.\nIf no user is specified, the command will display the progress of the user who invoked the command.',
-        '!setlevel @user': 'Sets the level of a specific user in the server. Only super admins can use this command.',
-        '!addxp @user': 'Adds experience points to a specific user in the server. Only super admins can use this command.',
-        '!deleteuser @user': "Deletes a specific user's data from the server, including their level and experience points.",
-        '!deleteusers': 'Deletes all user data from the server, including their levels and experience points. Only super admins can use this command.',
-        '!addadmin @user': 'Adds a new admin to the database.',
-        '!removeadmin @user': 'Removes an admin from the database.',
-        '!showadmins': 'Shows a list of all the admins in the database.',
-        '!help': 'Shows a list of all the available commands and their descriptions.'
+        '!help': 'Shows a list of all the available commands and their descriptions.',
+        '!setlevel @user': '**[Admin Command]** Sets the level of a specific user in the server. Only super admins can use this command.',
+        '!addxp @user': '**[Admin Command]** Adds experience points to a specific user in the server. Only super admins can use this command.',
+        '!showadmins': '**[Admin Command]** Shows a list of all the admins in the database.',
+        '!deleteuser @user': "**[Super Admin Command]** Deletes a specific user's data from the server, including their level and experience points.",
+        '!deleteusers': '**[Super Admin Command]** Deletes all user data from the server, including their levels and experience points. Only super admins can use this command.',
+        '!addadmin @user': '**[Super Admin Command]** Adds a new admin to the database.',
+        '!removeadmin @user': '**[Super Admin Command]** Removes an admin from the database.',
+        '!resetall': '**[Super Admin Command]** Resets the level and XP of all users in the database.'
     }
 
     # Creating an embed message with the commands and their descriptions
@@ -455,6 +458,52 @@ async def help(ctx):
     for command, description in commands.items():
         embed.add_field(name=command, value=description, inline=False)
     await ctx.send(embed=embed)
+
+# Command that resets the level and XP of all users in the database
+@bot.command()
+async def resetall(ctx):
+    # Checking if the user invoking the command is a super admin
+    if str(ctx.author.id) in super_admin_ids:
+        cursor = conn.cursor()
+        # Warning message to confirm action
+        embed = discord.Embed(color=discord.Color.red())
+        embed.add_field(name="⚠️ WARNING: This action will reset all users' levels and XP. Are you sure?", value="", inline=False)
+        warning = await ctx.send(embed=embed)
+        # Waiting for confirmation from user
+        await warning.add_reaction('✅')
+        await warning.add_reaction('❌')
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == ctx.author and str(reaction.emoji) in ['✅', '❌'])
+            # Checking if the user reacting is a super admin
+            if str(user.id) not in super_admin_ids:
+                return
+        except asyncio.TimeoutError:
+            await warning.delete()
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name="❌ Command timed out. Please try again.", value="", inline=False)
+            await ctx.send(embed=embed)
+        else:
+            # If user confirms action, reset all user levels and XP in the database
+            if str(reaction.emoji) == '✅':
+                cursor.execute('UPDATE users SET level = 0, xp = 0')
+                conn.commit()
+                # Sending confirmation message with the name of the super admin who did it
+                embed = discord.Embed(color=discord.Color.green())
+                embed.add_field(name=f"✅ All users' levels and XP have been reset by {user}.", value=f"ID: {user.id}", inline=False)
+                await ctx.send(embed=embed)
+            # If user cancels action, send error message
+            elif str(reaction.emoji) == '❌':
+                await warning.delete()
+                embed = discord.Embed(color=discord.Color.red())
+                embed.add_field(name="❌ Command cancelled. No changes have been made.", value="", inline=False)
+                await ctx.send(embed=embed)
+    # If user invoking the command is not a super admin, send error message
+    else:
+        embed = discord.Embed(color=discord.Color.red())
+        embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
+        await ctx.send(embed=embed)
+
+
 
 # Running the bot with the TOKEN
 bot.run(TOKEN)
