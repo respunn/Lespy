@@ -2,9 +2,9 @@
 import discord
 from discord.ext import commands
 import asyncio
+import sqlite3
 
 # Connecting to database
-import sqlite3
 try:
     conn = sqlite3.connect('level_system.db')
     c = conn.cursor()
