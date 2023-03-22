@@ -1,1 +1,0 @@
-print('Test file for working on commands with separately')
