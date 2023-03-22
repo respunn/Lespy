@@ -3,6 +3,8 @@ It is a level system discord bot made for Respy Project.
 
 Lespy that has a leveling system, Lespy listens to messages sent by users, and if the message contains certain words defined in the code, it checks whether the message is a reply or mentions the message author. If not, it finds the user who is tagged or replied to in the message and adds 1 XP to their current XP in the database. If the user reaches the required XP to level up, the bot sends an embed message announcing the user's level-up. The bot also has lots of commands that users can use. The bot uses SQLite3 database to store users' XP and level information, and it also has a separate table for admin users.
 
+I don't know how to make cogs but I will!
+
 ## Config file
 You need to create config.py file into the bot file and paste this:
 ```python
