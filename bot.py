@@ -75,7 +75,7 @@ async def on_message(message):
             result = cursor.fetchone()
             if result is None:
                 # Insert new user with default level and xp if not found in the database
-                cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), 0, 1))
+                cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), 0, min_level))
                 conn.commit()
             else:
                 # Add 1 xp to the user's current xp
@@ -273,10 +273,16 @@ async def leaderboard(ctx):
         level = row[1]
         xp = row[2]
         if str(name) == str(ctx.author):
-            embed.add_field(name=f"{i}. {name} (You)", value=f"Level: {level}\nXP: {xp}", inline=False)
+            if level == max_level:
+                embed.add_field(name=f"{i}. {name} (You)", value=f"Level: {level}\nReached max level.", inline=False)
+            else:
+                embed.add_field(name=f"{i}. {name} (You)", value=f"Level: {level}\nXP: {xp}", inline=False)
             check = True
         else:
-            embed.add_field(name=f"{i}. {name}", value=f"Level: {level}\nXP: {xp}", inline=False)
+            if level == max_level:
+                embed.add_field(name=f"{i}. {name}", value=f"Level: {level}\nReached max level.", inline=False)
+            else:
+                embed.add_field(name=f"{i}. {name}", value=f"Level: {level}\nXP: {xp}", inline=False)
         i += 1
     # Checking the rank of the user invoking the command and adding their rank to the embed if they're in the top 5
     c.execute('SELECT name, level, xp FROM users WHERE id = ?', (ctx.author.id,))
@@ -288,7 +294,10 @@ async def leaderboard(ctx):
         c.execute('SELECT COUNT(*) FROM users WHERE level > ? OR (level = ? AND xp > ?)', (level, level, xp))
         rank = c.fetchone()[0] + 1
         if check == False:
-            embed.add_field(name=f"{name} (You)", value=f"Level: {level}\nXP: {xp}\nRank: {rank}", inline=False)
+            if level == max_level:
+                embed.add_field(name=f"{name} (You)", value=f"Level: {level}\nReached max level.\nRank: {rank}", inline=False)
+            else:
+                embed.add_field(name=f"{name} (You)", value=f"Level: {level}\nXP: {xp}\nRank: {rank}", inline=False)
     else:
         embed.add_field(name=f"{ctx.author} (You)", value=f"You don't have any XP and Level.", inline=False)
     await ctx.send(embed=embed)
