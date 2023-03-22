@@ -27,7 +27,7 @@ It is important to note that !addxp, !setlevel, !addadmin, !removeadmin, !delete
 <br><br><br><br>
 
 You need to create config.py file into the bot file and paste this:
-```
+```python
 WORDS = ("ty", "thanks", "thank you") # Words needed to gain XP.
 level_xp_multiplier = 1.2 # The number that multiplies the xp required when leveling up.
 max_level = 500 # Maximum reachable level.
