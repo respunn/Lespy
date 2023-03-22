@@ -33,12 +33,6 @@ async def on_ready():
     # Printing bot's name and ID to console
     print('Connected to bot: {}'.format(bot.user.name))
     print('Bot ID: {}'.format(bot.user.id))
-    try:
-        # Syncing global commands and printing number of synced commands to console
-        synced = await bot.tree.sync()
-        print(f'Synced {len(synced)} global commands.')
-    except Exception as e:
-        print(e)
 
 # Importing config values from separate file
 from config import *
@@ -49,7 +43,6 @@ async def on_message(message):
     # Return if the message is sent by the bot itself
     if message.author == bot.user:
         return
-    
     # Check if the message contains any of the WORDS
     elif any(word in message.content.lower() for word in WORDS):
         # Check if the message is a reply or mentions the message author
@@ -64,11 +57,9 @@ async def on_message(message):
         else:
             # Check if the message mentions the message author
             is_reply_or_mention = any(user.id == message.author.id for user in message.mentions)
-        
         # Do not give xp if message author replies or mentions themselves
         if is_reply_or_mention:
             return
-        
         user = None
         # Extracting the user who is tagged or replied to in the message
         if message.reference and not is_reply_or_mention:
@@ -77,7 +68,6 @@ async def on_message(message):
                 user = referenced_msg.author
         elif message.mentions:
             user = message.mentions[0]
-        
         # If a valid user is found, add xp and level up accordingly
         if user:
             cursor = conn.cursor()
@@ -120,68 +110,79 @@ async def on_message(message):
 
 # Command to set a user's level
 @bot.command()
-async def setlevel(ctx, user: discord.User, level_from_user: int):
+async def setlevel(ctx, mentioned_user: discord.User, level_from_user: int):
     # Checking if the user invoking the command is an admin
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM admins WHERE id = ?', (ctx.author.id,))
     result = cursor.fetchone()
     if result is not None or ctx.author.id in super_admin_ids:
-        cursor = conn.cursor()
-        cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
-        result = cursor.fetchone()
-        check = 0
-        # Clamping level to max level if it exceeds the max level
-        if level_from_user > max_level:
-            level_from_user = max_level
-            check = 1
-        if level_from_user < min_level:
-            level_from_user = min_level
-            check = 2
-        # If user not found in database, insert new user with specified level and default XP
-        if result is None:
-            cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level_from_user, 0))
-            conn.commit()
-            # Sending confirmation message
-            # Check if the user's level is within the defined minimum and maximum levels
-            if check == 0:
-                embed = discord.Embed(color=discord.Color.green())
-                embed.add_field(name=f"✅ {user}'s level has been set to {level_from_user}.", value="", inline=False)
-                embed.set_footer(text=f"{user} has been added to the database.")
-                await ctx.send(embed=embed)
-            # Check if the user's level is greater than the defined maximum level
-            elif check == 1:
-                embed = discord.Embed(color=discord.Color.green())
-                embed.add_field(name=f"✅ {user}'s level has been set to {level_from_user}.", value="", inline=False)
-                embed.set_footer(text=f"{user} has been added to the database.\nMax level set to {max_level}.")
-                await ctx.send(embed=embed)
-            # Check if the user's level is less than the defined minimum level
-            else:
-                embed = discord.Embed(color=discord.Color.green())
-                embed.add_field(name=f"✅ {user}'s level has been set to {level_from_user}.", value="", inline=False)
-                embed.set_footer(text=f"{user} has been added to the database.\nMin level set to {min_level}.")
-                await ctx.send(embed=embed)
-        # If user found in database, update their level and reset their XP to 0
+        if mentioned_user == None:
+            # If user didn't mention someone or put user's id, send error message
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name=f"❌ You need to mention user or put user's id.", value="", inline=False)
+            await ctx.send(embed=embed)
+        elif level_from_user == None:
+            # If user didn't put xp amount, send error message
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name=f"❌ You need to put level.", value="", inline=False)
+            await ctx.send(embed=embed)
         else:
-            cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (0, level_from_user, user.id))
-            conn.commit()
-            # Sending confirmation message
-            # Check if the user's level is within the defined minimum and maximum levels
-            if check == 0:
-                embed = discord.Embed(color=discord.Color.green())
-                embed.add_field(name=f"✅ **{user}**'s level has been set to {level_from_user}.", value="", inline=False)
-                await ctx.send(embed=embed)
-            # Check if the user's level is greater than the defined maximum level
-            elif check == 1:
-                embed = discord.Embed(color=discord.Color.green())
-                embed.add_field(name=f"✅ {user}'s level has been set to {level_from_user}.", value="", inline=False)
-                embed.set_footer(text=f"Max level set to {max_level}.")
-                await ctx.send(embed=embed)
-            # Check if the user's level is less than the defined minimum level
+            cursor = conn.cursor()
+            cursor.execute('SELECT xp, level FROM users WHERE id = ?', (mentioned_user.id,))
+            result = cursor.fetchone()
+            check = 0
+            # Clamping level to max level if it exceeds the max level
+            if level_from_user > max_level:
+                level_from_user = max_level
+                check = 1
+            if level_from_user < min_level:
+                level_from_user = min_level
+                check = 2
+            # If user not found in database, insert new user with specified level and default XP
+            if result is None:
+                cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (mentioned_user.id, str(mentioned_user), level_from_user, 0))
+                conn.commit()
+                # Sending confirmation message
+                # Check if the user's level is within the defined minimum and maximum levels
+                if check == 0:
+                    embed = discord.Embed(color=discord.Color.green())
+                    embed.add_field(name=f"✅ {mentioned_user}'s level has been set to {level_from_user}.", value="", inline=False)
+                    embed.set_footer(text=f"{mentioned_user} has been added to the database.")
+                    await ctx.send(embed=embed)
+                # Check if the user's level is greater than the defined maximum level
+                elif check == 1:
+                    embed = discord.Embed(color=discord.Color.green())
+                    embed.add_field(name=f"✅ {mentioned_user}'s level has been set to {level_from_user}.", value="", inline=False)
+                    embed.set_footer(text=f"{mentioned_user} has been added to the database.\nMax level set to {max_level}.")
+                    await ctx.send(embed=embed)
+                # Check if the user's level is less than the defined minimum level
+                else:
+                    embed = discord.Embed(color=discord.Color.green())
+                    embed.add_field(name=f"✅ {mentioned_user}'s level has been set to {level_from_user}.", value="", inline=False)
+                    embed.set_footer(text=f"{mentioned_user} has been added to the database.\nMin level set to {min_level}.")
+                    await ctx.send(embed=embed)
+            # If user found in database, update their level and reset their XP to 0
             else:
-                embed = discord.Embed(color=discord.Color.green())
-                embed.add_field(name=f"✅ {user}'s level has been set to {level_from_user}.", value="", inline=False)
-                embed.set_footer(text=f"Min level set to {min_level}.")
-                await ctx.send(embed=embed)
+                cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (0, level_from_user, mentioned_user.id))
+                conn.commit()
+                # Sending confirmation message
+                # Check if the user's level is within the defined minimum and maximum levels
+                if check == 0:
+                    embed = discord.Embed(color=discord.Color.green())
+                    embed.add_field(name=f"✅ **{mentioned_user}**'s level has been set to {level_from_user}.", value="", inline=False)
+                    await ctx.send(embed=embed)
+                # Check if the user's level is greater than the defined maximum level
+                elif check == 1:
+                    embed = discord.Embed(color=discord.Color.green())
+                    embed.add_field(name=f"✅ {mentioned_user}'s level has been set to {level_from_user}.", value="", inline=False)
+                    embed.set_footer(text=f"Max level set to {max_level}.")
+                    await ctx.send(embed=embed)
+                # Check if the user's level is less than the defined minimum level
+                else:
+                    embed = discord.Embed(color=discord.Color.green())
+                    embed.add_field(name=f"✅ {mentioned_user}'s level has been set to {level_from_user}.", value="", inline=False)
+                    embed.set_footer(text=f"Min level set to {min_level}.")
+                    await ctx.send(embed=embed)
     # If user invoking the command is not an admin, send error message
     else:
         embed = discord.Embed(color=discord.Color.red())
@@ -190,57 +191,68 @@ async def setlevel(ctx, user: discord.User, level_from_user: int):
 
 # Command to add XP to a user
 @bot.command()
-async def addxp(ctx, user: discord.User, xp_amount_from_user: int):
+async def addxp(ctx, mentioned_user: discord.User, xp_amount_from_user: int):
     # Checking if the user invoking the command is an admin
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM admins WHERE id = ?', (ctx.author.id,))
     result = cursor.fetchone()
     if result is not None or ctx.author.id in super_admin_ids:
-        cursor = conn.cursor()
-        cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
-        result = cursor.fetchone()
-        # If user not found in database, insert new user with default level and specified XP
-        if result is None:
-            level = 1
-            xp = xp_amount_from_user
-            required_xp = level * 2 * level_xp_multiplier
-            required_xp = round(required_xp)
-            if required_xp > max_level_experience:
-                required_xp = max_level_experience
-            elif required_xp < min_level_experience:
-                required_xp = min_level_experience
-            while xp >= required_xp:
-                level += 1
-                xp = xp - required_xp
-            cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), level, xp))
-            conn.commit()
-            # Sending confirmation message
-            embed = discord.Embed(color=discord.Color.green())
-            embed.add_field(name=f"✅ Added {xp_amount_from_user} xp to {user}.", value="", inline=False)
-            embed.set_footer(text=f"{user} has been added to the database.")
+        if mentioned_user == None:
+            # If user didn't mention someone or put user's id, send error message
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name=f"❌ You need to mention user or put user's id.", value="", inline=False)
             await ctx.send(embed=embed)
-        # If user found in database, update their XP and level accordingly
+        elif xp_amount_from_user == None:
+            # If user didn't put xp amount, send error message
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name=f"❌ You need to put xp amount.", value="", inline=False)
+            await ctx.send(embed=embed)
         else:
-            xp, level = result
-            xp += xp_amount_from_user
-            required_xp = level * 2 * level_xp_multiplier
-            required_xp = round(required_xp)
-            if required_xp > max_level_experience:
-                required_xp = max_level_experience
-            elif required_xp < min_level_experience:
-                required_xp = min_level_experience
-            while xp >= required_xp:
-                level += 1
-                xp = xp - required_xp
-            if level >= max_level:
-                level = max_level
-                xp = 0
-            cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (xp, level, user.id))
-            conn.commit()
-            # Sending confirmation message
-            embed = discord.Embed(color=discord.Color.green())
-            embed.add_field(name=f"✅ Added {xp_amount_from_user} xp to {user}.", value="", inline=False)
-            await ctx.send(embed=embed)
+            cursor = conn.cursor()
+            cursor.execute('SELECT xp, level FROM users WHERE id = ?', (mentioned_user.id,))
+            result = cursor.fetchone()
+            # If user not found in database, insert new user with default level and specified XP
+            if result is None:
+                level = 1
+                xp = xp_amount_from_user
+                required_xp = level * 2 * level_xp_multiplier
+                required_xp = round(required_xp)
+                if required_xp > max_level_experience:
+                    required_xp = max_level_experience
+                elif required_xp < min_level_experience:
+                    required_xp = min_level_experience
+                while xp >= required_xp:
+                    level += 1
+                    xp = xp - required_xp
+                cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (mentioned_user.id, str(mentioned_user), level, xp))
+                conn.commit()
+                # Sending confirmation message
+                embed = discord.Embed(color=discord.Color.green())
+                embed.add_field(name=f"✅ Added {xp_amount_from_user} xp to {mentioned_user}.", value="", inline=False)
+                embed.set_footer(text=f"{mentioned_user} has been added to the database.")
+                await ctx.send(embed=embed)
+            # If user found in database, update their XP and level accordingly
+            else:
+                xp, level = result
+                xp += xp_amount_from_user
+                required_xp = level * 2 * level_xp_multiplier
+                required_xp = round(required_xp)
+                if required_xp > max_level_experience:
+                    required_xp = max_level_experience
+                elif required_xp < min_level_experience:
+                    required_xp = min_level_experience
+                while xp >= required_xp:
+                    level += 1
+                    xp = xp - required_xp
+                if level >= max_level:
+                    level = max_level
+                    xp = 0
+                cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (xp, level, mentioned_user.id))
+                conn.commit()
+                # Sending confirmation message
+                embed = discord.Embed(color=discord.Color.green())
+                embed.add_field(name=f"✅ Added {xp_amount_from_user} xp to {mentioned_user}.", value="", inline=False)
+                await ctx.send(embed=embed)
     # If user invoking the command is not an admin, send error message
     else:
         embed = discord.Embed(color=discord.Color.red())
@@ -283,16 +295,22 @@ async def leaderboard(ctx):
 
 # Command to delete a user from the database
 @bot.command()
-async def deleteuser(ctx, user: discord.User):
-    if ctx.author.id in super_admin_ids:
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM users WHERE id = ?', (user.id,))
-        conn.commit()
-        # Sending confirmation message
-        embed = discord.Embed(color=discord.Color.green())
-        embed.add_field(name=f"✅ {user} has been deleted from the database.", value="", inline=False)
-        await ctx.send(embed=embed)
-    # If user invoking the command is not an admin, send error message
+async def deleteuser(ctx, mentioned_user: discord.User):
+    if str(ctx.author.id) in super_admin_ids:
+        if mentioned_user == None:
+            # If user didn't mention someone or put user's id, send error message
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name=f"❌ You need to mention user or put user's id.", value="", inline=False)
+            await ctx.send(embed=embed)
+        else:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM users WHERE id = ?', (mentioned_user.id,))
+            conn.commit()
+            # Sending confirmation message
+            embed = discord.Embed(color=discord.Color.green())
+            embed.add_field(name=f"✅ {mentioned_user} has been deleted from the database.", value="", inline=False)
+            await ctx.send(embed=embed)
+    # If user invoking the command is not a super admin, send error message
     else:
         embed = discord.Embed(color=discord.Color.red())
         embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
@@ -301,7 +319,7 @@ async def deleteuser(ctx, user: discord.User):
 # Command to delete all users from the database
 @bot.command()
 async def deleteusers(ctx):
-    if ctx.author.id in super_admin_ids:
+    if str(ctx.author.id) in super_admin_ids:
         cursor = conn.cursor()
         # Executing SQL to delete all records from the "users" table
         cursor.execute('DELETE FROM users')
@@ -310,7 +328,7 @@ async def deleteusers(ctx):
         embed = discord.Embed(color=discord.Color.green())
         embed.add_field(name="✅ All users have been deleted from the database.", value="", inline=False)
         await ctx.send(embed=embed)
-    # If user invoking the command is not an admin, send error message
+    # If user invoking the command is not a super admin, send error message
     else:
         embed = discord.Embed(color=discord.Color.red())
         embed.add_field(name="⛔ You don't have enough permission for this command.", value="", inline=False)
@@ -353,26 +371,32 @@ async def progress(ctx, user: discord.User = None):
 
 # Command to add a new admin to the database
 @bot.command()
-async def addadmin(ctx, user: discord.User):
+async def addadmin(ctx, mentioned_user: discord.User = None):
     # Checking if the user invoking the command is a super admin
     if str(ctx.author.id) in super_admin_ids:
-        cursor = conn.cursor()
-        # Checking if the user is already an admin
-        cursor.execute('SELECT * FROM admins WHERE id = ?', (user.id,))
-        result = cursor.fetchone()
-        # If user is already an admin, send error message
-        if result is not None:
+        if mentioned_user == None:
+            # If user didn't mention someone or put user's id, send error message
             embed = discord.Embed(color=discord.Color.red())
-            embed.add_field(name=f"❌ {user} is already an admin.", value="", inline=False)
+            embed.add_field(name=f"❌ You need to mention user or put user's id.", value="", inline=False)
             await ctx.send(embed=embed)
-        # If user is not an admin, add user as an admin to the database
         else:
-            cursor.execute('INSERT INTO admins (id, name) VALUES (?, ?)', (user.id, str(user)))
-            conn.commit()
-            # Sending confirmation message
-            embed = discord.Embed(color=discord.Color.green())
-            embed.add_field(name=f"✅ {user} has been added as an admin.", value="", inline=False)
-            await ctx.send(embed=embed)
+            cursor = conn.cursor()
+            # Checking if the user is already an admin
+            cursor.execute('SELECT * FROM admins WHERE id = ?', (mentioned_user.id,))
+            result = cursor.fetchone()
+            # If user is already an admin, send error message
+            if result is not None:
+                embed = discord.Embed(color=discord.Color.red())
+                embed.add_field(name=f"❌ {mentioned_user} is already an admin.", value="", inline=False)
+                await ctx.send(embed=embed)
+            # If user is not an admin, add user as an admin to the database
+            else:
+                cursor.execute('INSERT INTO admins (id, name) VALUES (?, ?)', (mentioned_user.id, str(mentioned_user)))
+                conn.commit()
+                # Sending confirmation message
+                embed = discord.Embed(color=discord.Color.green())
+                embed.add_field(name=f"✅ {mentioned_user} has been added as an admin.", value="", inline=False)
+                await ctx.send(embed=embed)
     # If user invoking the command is not a super admin, send error message
     else:
         embed = discord.Embed(color=discord.Color.red())
@@ -381,25 +405,31 @@ async def addadmin(ctx, user: discord.User):
 
 # Command to remove an admin from the database
 @bot.command()
-async def removeadmin(ctx, user: discord.User):
+async def removeadmin(ctx, mentioned_user: discord.User = None):
     # Checking if the user invoking the command is an admin
     if str(ctx.author.id) in super_admin_ids:
-        # Removing the user's ID from the list of admin IDs
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM admins WHERE id = ?', (user.id,))
-        result = cursor.fetchone()
-        if result is not None:
-            cursor.execute('DELETE FROM admins WHERE id = ?', (user.id,))
-            conn.commit()
-            # Sending confirmation message
-            embed = discord.Embed(color=discord.Color.green())
-            embed.add_field(name=f"✅ {user} is no longer an admin.", value="", inline=False)
+        if mentioned_user == None:
+            # If user didn't mention someone or put user's id, send error message
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name=f"❌ You need to mention user or put user's id.", value="", inline=False)
             await ctx.send(embed=embed)
         else:
-            # Sending error message if user is not found in the database
-            embed = discord.Embed(color=discord.Color.red())
-            embed.add_field(name=f"⛔ {user} is not an admin.", value="", inline=False)
-            await ctx.send(embed=embed)
+            # Removing the mentioned_user ID from the list of admin IDs
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM admins WHERE id = ?', (mentioned_user.id,))
+            result = cursor.fetchone()
+            if result is not None:
+                cursor.execute('DELETE FROM admins WHERE id = ?', (mentioned_user.id,))
+                conn.commit()
+                # Sending confirmation message
+                embed = discord.Embed(color=discord.Color.green())
+                embed.add_field(name=f"✅ {mentioned_user} is no longer an admin.", value="", inline=False)
+                await ctx.send(embed=embed)
+            else:
+                # Sending error message if mentioned_user is not found in the database
+                embed = discord.Embed(color=discord.Color.red())
+                embed.add_field(name=f"⛔ {mentioned_user} is not an admin.", value="", inline=False)
+                await ctx.send(embed=embed)
     else:
         # If user invoking the command is not a super admin, send error message
         embed = discord.Embed(color=discord.Color.red())
@@ -441,18 +471,17 @@ async def help(ctx):
     # Dictionary of all the commands and their descriptions
     commands = {
         '!leaderboard': 'Displays the leaderboard of the top users in the server based on their level.',
-        '!progress @user[Optional]': 'Displays the progress of a specific user in the server towards the next level.\nIf no user is specified, the command will display the progress of the user who invoked the command.',
+        '!progress @user or user_id [Optional]': 'Displays the progress of a specific user in the server towards the next level.\nIf no user is specified, the command will display the progress of the user who invoked the command.',
         '!help': 'Shows a list of all the available commands and their descriptions.',
-        '!setlevel @user': '**[Admin Command]** Sets the level of a specific user in the server.',
-        '!addxp @user': '**[Admin Command]** Adds experience points to a specific user in the server.',
+        '!setlevel @user or user_id': '**[Admin Command]** Sets the level of a specific user in the server.',
+        '!addxp @user or user_id': '**[Admin Command]** Adds experience points to a specific user in the server.',
         '!showadmins': '**[Admin Command]** Shows a list of all the admins in the database.',
-        '!deleteuser @user': "**[Super Admin Command]** Deletes a specific user's data from the server, including their level and experience points.",
+        '!deleteuser @user or user_id': "**[Super Admin Command]** Deletes a specific user's data from the server, including their level and experience points.",
         '!deleteusers': '**[Super Admin Command]** Deletes all user data from the server, including their levels and experience points.',
-        '!addadmin @user': '**[Super Admin Command]** Adds a new admin to the database.',
-        '!removeadmin @user': '**[Super Admin Command]** Removes an admin from the database.',
+        '!addadmin @user or user_id': '**[Super Admin Command]** Adds a new admin to the database.',
+        '!removeadmin @user or user_id': '**[Super Admin Command]** Removes an admin from the database.',
         '!resetall': '**[Super Admin Command]** Resets the level and XP of all users in the database.'
     }
-
     # Creating an embed message with the commands and their descriptions
     embed = discord.Embed(title="Help", description="List of all available commands and their descriptions.", color=discord.Color.blue())
     for command, description in commands.items():
