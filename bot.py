@@ -263,7 +263,7 @@ async def addxp(ctx, mentioned_user: discord.User, xp_amount_from_user: int):
 @bot.command()
 async def leaderboard(ctx):
     check = False
-    embed = discord.Embed(title="Leaderboard", description="Top 5 Users by Level", color=discord.Color.blue())
+    embed = discord.Embed(title="Leaderboard", description="Top 5 Users by Level", color=0x00c3ff)
     c.execute('SELECT name, level, xp FROM users ORDER BY level DESC, xp DESC LIMIT 5')
     result = c.fetchall()
     i = 1
@@ -496,7 +496,7 @@ async def showadmins(ctx):
             await ctx.send(embed=embed)
         else:
             # Creating an embed message with the list of admins
-            embed = discord.Embed(title="Admin List", description="List of all admins", color=discord.Color.blue())
+            embed = discord.Embed(title="Admin List", description="List of all admins", color=0x00c3ff)
             for row in result:
                 embed.add_field(name=f"ID: {row[0]}", value=f"Name: {row[1]}", inline=False)
             await ctx.send(embed=embed)
@@ -524,7 +524,7 @@ async def help(ctx):
         '!resetall': '**[Super Admin Command]** Resets the level and XP of all users in the database.'
     }
     # Creating an embed message with the commands and their descriptions
-    embed = discord.Embed(title="Help", description="List of all available commands and their descriptions.", color=discord.Color.blue())
+    embed = discord.Embed(title="Help", description="List of all available commands and their descriptions.", color=0x00c3ff)
     for command, description in commands.items():
         embed.add_field(name=command, value=description, inline=False)
     await ctx.send(embed=embed)
