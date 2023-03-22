@@ -332,7 +332,7 @@ async def deleteusers(ctx):
         cursor = conn.cursor()
         # Warning message to confirm action
         embed = discord.Embed(color=discord.Color.red())
-        embed.add_field(name="⚠️ WARNING: This action will reset all users' levels and XP. Are you sure?", value="", inline=False)
+        embed.add_field(name="⚠️ WARNING: This action will delete all users with their levels and XP. Are you sure?", value="", inline=False)
         warning = await ctx.send(embed=embed)
         # Waiting for confirmation from user
         await warning.add_reaction('✅')
