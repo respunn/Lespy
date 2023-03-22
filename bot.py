@@ -388,10 +388,17 @@ async def progress(ctx, user: discord.User = None):
         remaining_xp = required_xp - xp
         # Sending progress message
         embed = discord.Embed(color=discord.Color.green())
+        # Checking user is at max level or not
         if user == ctx.author:
-            embed.add_field(name=f"📊 Your progress:", value=f"Level: {level}\nXP: {xp}/{required_xp} ({xp_percentage}%)\nRemaining XP to next level: {remaining_xp}")
+            if level == max_level:
+                embed.add_field(name=f"📊 Your progress:", value=f"Level: {level}\nYou are at the highest level you can reach!")
+            else:
+                embed.add_field(name=f"📊 Your progress:", value=f"Level: {level}\nXP: {xp}/{required_xp} ({xp_percentage}%)\nRemaining XP to next level: {remaining_xp}")
         else:
-            embed.add_field(name=f"📊 {user}'s progress:", value=f"Level: {level}\nXP: {xp}/{required_xp} ({xp_percentage}%)\nRemaining XP to next level: {remaining_xp}")
+            if level == max_level:
+                embed.add_field(name=f"📊 {user}'s progress:", value=f"Level: {level}\nYou are at the highest level you can reach!")
+            else:
+                embed.add_field(name=f"📊 {user}'s progress:", value=f"Level: {level}\nXP: {xp}/{required_xp} ({xp_percentage}%)\nRemaining XP to next level: {remaining_xp}")
         await ctx.send(embed=embed)
 
 # Command to add a new admin to the database
