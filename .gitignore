@@ -3,3 +3,4 @@
 __pycache__
 level_system.db
 test.py
+config.py
