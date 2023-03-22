@@ -321,13 +321,38 @@ async def deleteuser(ctx, mentioned_user: discord.User):
 async def deleteusers(ctx):
     if str(ctx.author.id) in super_admin_ids:
         cursor = conn.cursor()
-        # Executing SQL to delete all records from the "users" table
-        cursor.execute('DELETE FROM users')
-        conn.commit()
-        # Sending confirmation message
-        embed = discord.Embed(color=discord.Color.green())
-        embed.add_field(name="✅ All users have been deleted from the database.", value="", inline=False)
-        await ctx.send(embed=embed)
+        # Warning message to confirm action
+        embed = discord.Embed(color=discord.Color.red())
+        embed.add_field(name="⚠️ WARNING: This action will reset all users' levels and XP. Are you sure?", value="", inline=False)
+        warning = await ctx.send(embed=embed)
+        # Waiting for confirmation from user
+        await warning.add_reaction('✅')
+        await warning.add_reaction('❌')
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda reaction, user: user == ctx.author and str(reaction.emoji) in ['✅', '❌'])
+            # Checking if the user reacting is a super admin
+            if str(user.id) not in super_admin_ids:
+                return
+        except asyncio.TimeoutError:
+            await warning.delete()
+            embed = discord.Embed(color=discord.Color.red())
+            embed.add_field(name="❌ Command timed out. Please try again.", value="", inline=False)
+            await ctx.send(embed=embed)
+        else:
+            # If user confirms action, delete all user from the database
+            if str(reaction.emoji) == '✅':
+                cursor.execute('DELETE FROM users')
+                conn.commit()
+                # Sending confirmation message with the name of the super admin who did it
+                embed = discord.Embed(color=discord.Color.green())
+                embed.add_field(name=f"✅ All users have been deleted from the database by {user}.", value=f"ID: {user.id}", inline=False)
+                await ctx.send(embed=embed)
+            # If user cancels action, send error message
+            elif str(reaction.emoji) == '❌':
+                await warning.delete()
+                embed = discord.Embed(color=discord.Color.red())
+                embed.add_field(name="❌ Command cancelled. No changes have been made.", value="", inline=False)
+                await ctx.send(embed=embed)
     # If user invoking the command is not a super admin, send error message
     else:
         embed = discord.Embed(color=discord.Color.red())
