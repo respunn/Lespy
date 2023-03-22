@@ -75,7 +75,7 @@ async def on_message(message):
             result = cursor.fetchone()
             if result is None:
                 # Insert new user with default level and xp if not found in the database
-                cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), 0, 0))
+                cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), 0, 1))
                 conn.commit()
             else:
                 # Add 1 xp to the user's current xp
@@ -115,7 +115,7 @@ async def setlevel(ctx, mentioned_user: discord.User, level_from_user: int):
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM admins WHERE id = ?', (ctx.author.id,))
     result = cursor.fetchone()
-    if result is not None or ctx.author.id in super_admin_ids:
+    if result is not None or str(ctx.author.id) in super_admin_ids:
         if mentioned_user == None:
             # If user didn't mention someone or put user's id, send error message
             embed = discord.Embed(color=discord.Color.red())
@@ -196,7 +196,7 @@ async def addxp(ctx, mentioned_user: discord.User, xp_amount_from_user: int):
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM admins WHERE id = ?', (ctx.author.id,))
     result = cursor.fetchone()
-    if result is not None or ctx.author.id in super_admin_ids:
+    if result is not None or str(ctx.author.id) in super_admin_ids:
         if mentioned_user == None:
             # If user didn't mention someone or put user's id, send error message
             embed = discord.Embed(color=discord.Color.red())
@@ -468,7 +468,7 @@ async def showadmins(ctx):
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM admins WHERE id = ?', (ctx.author.id,))
     result = cursor.fetchone()
-    if result is not None or ctx.author.id in super_admin_ids:
+    if result is not None or str(ctx.author.id) in super_admin_ids:
         cursor = conn.cursor()
         # Fetching all the admins from the database
         cursor.execute('SELECT id, name FROM admins')
