@@ -17,9 +17,9 @@ bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 bot.remove_command('help')
 
 # Import the cogs
-from commands.user_commands import user_commands
-from commands.admin_commands import admin_commands
-from commands.super_admin_commands import super_admin_commands
+from cogs.user_commands import user_commands
+from cogs.admin_commands import admin_commands
+from cogs.super_admin_commands import super_admin_commands
 
 # Add the cogs to the bot (await the add_cog() method calls)
 async def setup():

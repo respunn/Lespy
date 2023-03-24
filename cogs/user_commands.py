@@ -10,6 +10,9 @@ class user_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print('User commands cog is ready.')
     
     # Command to show the leaderboard of the top 5 users by level
     @commands.command()
@@ -53,8 +56,7 @@ class user_commands(commands.Cog):
         else:
             embed.add_field(name=f"{ctx.author} (You)", value=f"You don't have any XP and Level.", inline=False)
         await ctx.send(embed=embed)
-
-
+    
     # Command to show user's own or tagged user's XP and level progress
     @commands.command()
     async def progress(self, ctx, user: discord.User = None):
@@ -96,8 +98,7 @@ class user_commands(commands.Cog):
                 else:
                     embed.add_field(name=f"📊 {user}'s progress:", value=f"Level: {level}\nXP: {xp}/{required_xp} ({xp_percentage}%)\nRemaining XP to next level: {remaining_xp}")
             await ctx.send(embed=embed)
-
-
+    
     # Command that gives information about all commands
     @commands.command()
     async def help(self, ctx):

@@ -10,6 +10,9 @@ class super_admin_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print('Super admin commands cog is ready.')
     
     # Command to add a new admin to the database
     @commands.command()
@@ -45,7 +48,6 @@ class super_admin_commands(commands.Cog):
             embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
             await ctx.send(embed=embed)
     
-    
     # Command to remove an admin from the database
     @commands.command()
     async def removeadmin(self, ctx, mentioned_user: discord.User = None):
@@ -78,7 +80,6 @@ class super_admin_commands(commands.Cog):
             embed = discord.Embed(color=discord.Color.red())
             embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
             await ctx.send(embed=embed)
-    
     
     # Command that resets the level and XP of all users in the database
     @commands.command()
@@ -124,7 +125,6 @@ class super_admin_commands(commands.Cog):
             embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
             await ctx.send(embed=embed)
     
-    
     # Command to delete a user from the database
     @commands.command()
     async def deleteuser(self, ctx, mentioned_user: discord.User):
@@ -147,7 +147,6 @@ class super_admin_commands(commands.Cog):
             embed = discord.Embed(color=discord.Color.red())
             embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
             await ctx.send(embed=embed)
-    
     
     # Command to delete all users from the database
     @commands.command()

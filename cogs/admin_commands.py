@@ -9,6 +9,10 @@ class admin_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print('Admin commands cog is ready.')
+    
     # Command to set a user's level
     @commands.command()
     async def setlevel(self, ctx, mentioned_user: discord.User, level_from_user: int):
@@ -89,7 +93,7 @@ class admin_commands(commands.Cog):
             embed = discord.Embed(color=discord.Color.red())
             embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
             await ctx.send(embed=embed)
-
+    
     # Command to add XP to a user
     @commands.command()
     async def addxp(self, ctx, mentioned_user: discord.User, xp_amount_from_user: int):
@@ -159,7 +163,6 @@ class admin_commands(commands.Cog):
             embed = discord.Embed(color=discord.Color.red())
             embed.add_field(name=f"⛔ You don't have enough permission for this command.", value="", inline=False)
             await ctx.send(embed=embed)
-    
     
     # Command to show all admins from the database
     @commands.command()
