@@ -6,7 +6,7 @@ Lespy that has a leveling system, Lespy listens to messages sent by users, and i
 I don't know how to make cogs but I will!
 
 ## Config file
-You need to create config.py file into the bot file and paste this:
+You need to create config.py file into the important_files and paste this:
 ```python
 WORDS = ("ty", "thanks", "thank you") # Words needed to gain XP.
 level_xp_multiplier = 1.2 # The number that multiplies the xp required when leveling up.
