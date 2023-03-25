@@ -2,6 +2,7 @@
 import discord
 import asyncio
 from discord.ext import commands
+import time
 
 # Connecting to database
 from important_files.connection_to_database import *
@@ -40,12 +41,27 @@ async def on_ready():
 # Importing config values from separate file
 from important_files.config import *
 
+# Cooldown data
+cooldowns = {}
+
 # Message event listener for XP system
 @bot.event
 async def on_message(message):
+    global cooldowns
     # Return if the message is sent by the bot itself
-    if message.author == bot.user:
+    if message.author.bot:
         return
+    # Check for cooldown
+    user_id = message.author.id
+    current_time = time.time()
+    if user_id in cooldowns:
+        cooldown_end = cooldowns[user_id]
+        if current_time < cooldown_end:
+            # Ignore the message if the user is still on cooldown
+            return
+        else:
+            # Remove user from cooldowns if the cooldown has ended
+            del cooldowns[user_id]
     # Check if the message contains any of the WORDS
     elif any(word in message.content.lower() for word in WORDS):
         # Check if the message is a reply or mentions the message author
@@ -73,6 +89,8 @@ async def on_message(message):
             user = message.mentions[0]
         # If a valid user is found, add xp and level up accordingly
         if user:
+            # Add user to cooldowns
+            cooldowns[user_id] = current_time + cooldown_duration
             cursor = conn.cursor()
             cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
             result = cursor.fetchone()
@@ -80,6 +98,7 @@ async def on_message(message):
                 # Insert new user with default level and xp if not found in the database
                 cursor.execute('INSERT INTO users VALUES (?, ?, ?, ?)', (user.id, str(user), 0, min_level))
                 conn.commit()
+                # make embed message here
             else:
                 # Add 1 xp to the user's current xp
                 xp, level = result
@@ -91,15 +110,26 @@ async def on_message(message):
                     required_xp = max_level_experience
                 elif required_xp < min_level_experience:
                     required_xp = min_level_experience
+                # Creating check for level up or not.
+                level_check = False
                 # Level up and send an embed message if required xp is reached
                 if xp >= required_xp:
                     level += 1
                     xp = xp - required_xp
                     channel = message.channel
+                    # We recalculate the amount of xp needed. (Because level is changed.)
+                    required_xp = level * 2 * level_xp_multiplier
+                    required_xp = round(required_xp)
+                    # Check if required xp is within the defined range
+                    if required_xp > max_level_experience:
+                        required_xp = max_level_experience
+                    elif required_xp < min_level_experience:
+                        required_xp = min_level_experience
                     embed = discord.Embed(color=discord.Color.green())
-                    embed.add_field(name=f"🎉 You've leveled up {user.name}, congratulations!", value="", inline=False)
-                    embed.set_footer(text=f"Your current level is {level}.")
+                    embed.add_field(name=f"🎉 You've leveled up {user}, congratulations!", value="", inline=False)
+                    embed.set_footer(text=f"Your current level is {level}.\nFor the next level you must earn {required_xp} xp!")
                     await channel.send(embed=embed)
+                    level_check = True
                 # Clamp level to max level if it exceeds the max level
                 if level >= max_level:
                     level = max_level
@@ -107,6 +137,13 @@ async def on_message(message):
                 # Update user's xp and level in the database
                 cursor.execute('UPDATE users SET xp = ?, level = ? WHERE id = ?', (xp, level, user.id))
                 conn.commit()
+                if level_check == False:
+                    xp_percentage = int((xp / required_xp) * 100)
+                    channel = message.channel
+                    embed = discord.Embed(color=discord.Color.green())
+                    embed.add_field(name=f"🎊 You've earned an xp {user}!", value="", inline=False)
+                    embed.set_footer(text=f"XP: {xp}/{required_xp} ({xp_percentage}%)")
+                    await channel.send(embed=embed)
     else:
         # Process commands if the message does not contain any of the WORDS
         await bot.process_commands(message)

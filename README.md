@@ -12,6 +12,7 @@ max_level = 500 # Maximum reachable level.
 min_level = 1 # Minimum adjustable level.
 min_level_experience = 10 # Minimum required xp to level up.
 max_level_experience = 1000 # Maximum required xp to level up.
+cooldown_duration = 60 # 60 seconds cooldown for on_message event.
 
 super_admin_ids = (
     "123456789123456789" # Discord id of the person you want to make super admin.
