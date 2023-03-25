@@ -1,21 +1,27 @@
 # Importing config values from separate file
 import discord
 from discord.ext import commands
+from discord.ext.commands import cooldown, BucketType, CommandOnCooldown
+import asyncio
+import math
 
 from important_files.config import *
 from important_files.connection_to_database import *
 
-
 class user_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+        self.help_cooldown_users = set()
+        self.progress_cooldown_users = set()
+        self.leaderboard_cooldown_users = set()
+
     @commands.Cog.listener()
     async def on_ready(self):
         print('User commands cog is ready.')
     
     # Command to show the leaderboard of the top 5 users by level
     @commands.command()
+    @cooldown(1, 60, BucketType.user)
     async def leaderboard(self, ctx):
         check = False
         embed = discord.Embed(title="Leaderboard", description="Top 5 Users by Level", color=0x00c3ff)
@@ -56,9 +62,10 @@ class user_commands(commands.Cog):
         else:
             embed.add_field(name=f"{ctx.author} (You)", value=f"You don't have any XP and Level.", inline=False)
         await ctx.send(embed=embed)
-    
+
     # Command to show user's own or tagged user's XP and level progress
     @commands.command()
+    @cooldown(1, 60, BucketType.user)
     async def progress(self, ctx, user: discord.User = None):
         # If no user is tagged, show progress of the message author
         if user is None:
@@ -98,9 +105,10 @@ class user_commands(commands.Cog):
                 else:
                     embed.add_field(name=f"📊 {user}'s progress:", value=f"Level: {level}\nXP: {xp}/{required_xp} ({xp_percentage}%)\nRemaining XP to next level: {remaining_xp}")
             await ctx.send(embed=embed)
-    
+
     # Command that gives information about all commands
     @commands.command()
+    @cooldown(1, 60, BucketType.user)
     async def help(self, ctx):
         # Dictionary of all the commands and their descriptions
         commands = {
@@ -121,6 +129,51 @@ class user_commands(commands.Cog):
         for command, description in commands.items():
             embed.add_field(name=command, value=description, inline=False)
         await ctx.send(embed=embed)
+
+    @help.error
+    async def command_error(self, ctx, error):
+        if isinstance(error, CommandOnCooldown):
+            user_id = ctx.author.id
+            remaining_time = math.ceil(error.retry_after)
+            if user_id not in self.help_cooldown_users:
+                self.help_cooldown_users.add(user_id)
+                remaining_time = math.ceil(error.retry_after)
+                embed = discord.Embed(color=discord.Color.orange())
+                embed.add_field(name=f"⚠️ {ctx.author} this command is on cooldown for you.", value=f"Please try again in {remaining_time} seconds.", inline=False)
+                cooldown_error = await ctx.send(embed=embed)
+                await asyncio.sleep(remaining_time)
+                await cooldown_error.delete()
+                self.help_cooldown_users.remove(user_id)
+
+    @progress.error
+    async def command_error(self, ctx, error):
+        if isinstance(error, CommandOnCooldown):
+            user_id = ctx.author.id
+            remaining_time = math.ceil(error.retry_after)
+            if user_id not in self.progress_cooldown_users:
+                self.progress_cooldown_users.add(user_id)
+                remaining_time = math.ceil(error.retry_after)
+                embed = discord.Embed(color=discord.Color.orange())
+                embed.add_field(name=f"⚠️ {ctx.author} this command is on cooldown for you.", value=f"Please try again in {remaining_time} seconds.", inline=False)
+                cooldown_error = await ctx.send(embed=embed)
+                await asyncio.sleep(remaining_time)
+                await cooldown_error.delete()
+                self.progress_cooldown_users.remove(user_id)
+    
+    @leaderboard.error
+    async def command_error(self, ctx, error):
+        if isinstance(error, CommandOnCooldown):
+            user_id = ctx.author.id
+            remaining_time = math.ceil(error.retry_after)
+            if user_id not in self.leaderboard_cooldown_users:
+                self.leaderboard_cooldown_users.add(user_id)
+                remaining_time = math.ceil(error.retry_after)
+                embed = discord.Embed(color=discord.Color.orange())
+                embed.add_field(name=f"⚠️ {ctx.author} this command is on cooldown for you.", value=f"Please try again in {remaining_time} seconds.", inline=False)
+                cooldown_error = await ctx.send(embed=embed)
+                await asyncio.sleep(remaining_time)
+                await cooldown_error.delete()
+                self.leaderboard_cooldown_users.remove(user_id)
 
 def setup(bot):
     bot.add_cog(user_commands(bot))

@@ -41,7 +41,7 @@ async def on_ready():
 # Importing config values from separate file
 from important_files.config import *
 
-# Cooldown data
+# User's cooldown datas
 cooldowns = {}
 
 # Message event listener for XP system
