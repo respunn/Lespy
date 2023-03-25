@@ -21,7 +21,7 @@ class user_commands(commands.Cog):
     
     # Command to show the leaderboard of the top 5 users by level
     @commands.command()
-    @cooldown(1, 60, BucketType.user)
+    @cooldown(1, cooldown_duration_commands, BucketType.user)
     async def leaderboard(self, ctx):
         check = False
         embed = discord.Embed(title="Leaderboard", description="Top 5 Users by Level", color=0x00c3ff)
@@ -65,7 +65,7 @@ class user_commands(commands.Cog):
 
     # Command to show user's own or tagged user's XP and level progress
     @commands.command()
-    @cooldown(1, 60, BucketType.user)
+    @cooldown(1, cooldown_duration_commands, BucketType.user)
     async def progress(self, ctx, user: discord.User = None):
         # If no user is tagged, show progress of the message author
         if user is None:
@@ -108,7 +108,7 @@ class user_commands(commands.Cog):
 
     # Command that gives information about all commands
     @commands.command()
-    @cooldown(1, 60, BucketType.user)
+    @cooldown(1, cooldown_duration_commands, BucketType.user)
     async def help(self, ctx):
         # Dictionary of all the commands and their descriptions
         commands = {

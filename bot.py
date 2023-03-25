@@ -90,7 +90,7 @@ async def on_message(message):
         # If a valid user is found, add xp and level up accordingly
         if user:
             # Add user to cooldowns
-            cooldowns[user_id] = current_time + cooldown_duration
+            cooldowns[user_id] = current_time + cooldown_duration_on_message
             cursor = conn.cursor()
             cursor.execute('SELECT xp, level FROM users WHERE id = ?', (user.id,))
             result = cursor.fetchone()
