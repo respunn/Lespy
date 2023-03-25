@@ -20,12 +20,10 @@ bot.remove_command('help')
 from cogs.user_commands import user_commands
 from cogs.admin_commands import admin_commands
 from cogs.super_admin_commands import super_admin_commands
-from cogs.download_commands import downloadcommands
 
 # Add the cogs to the bot (await the add_cog() method calls)
 async def setup():
     # Add the cogs to the bot
-    await bot.add_cog(downloadcommands(bot))
     await bot.add_cog(user_commands(bot))
     await bot.add_cog(admin_commands(bot))
     await bot.add_cog(super_admin_commands(bot))
